@@ -2,14 +2,14 @@
 
 type ServiceErrorPayload = { [key: string]: boolean | string | number };
 
-export class ServerErrorFactory {
+export class ServiceErrorBuilder {
   private serviceId: string;
 
   constructor(serviceId: string) {
     this.serviceId = serviceId;
   }
 
-  createPrototype<TPayload extends ServiceErrorPayload>(options: {
+  build<TPayload extends ServiceErrorPayload>(options: {
     id: string;
     message: string;
   }): ServiceErrorPrototype<TPayload> {
@@ -32,7 +32,7 @@ export class ServiceErrorPrototype<TPayload extends ServiceErrorPayload> {
     this.errorMessage = errorMessage;
   }
 
-  create(payload: TPayload): ServiceError<TPayload> {
+  new(payload: TPayload): ServiceError<TPayload> {
     return new ServiceError(this, payload);
   }
 
@@ -69,7 +69,7 @@ export class ServiceError<TPayload extends ServiceErrorPayload> extends Error {
     this.payload = payload;
   }
 
-  is(target: ServiceErrorPrototype<any> | ServiceError<any>): boolean {
+  is(target: any): boolean {
     if (target instanceof ServiceErrorPrototype) {
       return target.equals(this.prototype);
     }

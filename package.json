@@ -1,6 +1,6 @@
 {
   "name": "ts-nanoservice",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "main": "build/index.js",
   "module": "build/index.esm.js",
   "types": "build/types/index.d.ts",
@@ -12,7 +12,6 @@
     "@types/express": "^4.17.14",
     "@types/jest": "^29.2.2",
     "@types/node": "^18.11.9",
-    "@types/sprintf-js": "^1.1.2",
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",
     "concurrently": "^7.5.0",
