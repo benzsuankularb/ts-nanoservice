@@ -1,0 +1,47 @@
+{
+  "name": "ts-nanoservice",
+  "version": "1.0.0",
+  "main": "build/index.js",
+  "module": "build/index.esm.js",
+  "types": "build/types/index.d.ts",
+  "repository": "https://github.com/benzsuankularb/ts-nanoservice",
+  "files": [
+    "*"
+  ],
+  "devDependencies": {
+    "@types/express": "^4.17.14",
+    "@types/jest": "^29.2.2",
+    "@types/node": "^18.11.9",
+    "@types/sprintf-js": "^1.1.2",
+    "@typescript-eslint/eslint-plugin": "^5.42.0",
+    "@typescript-eslint/parser": "^5.42.0",
+    "concurrently": "^7.5.0",
+    "dotenv": "^16.0.3",
+    "esbuild": "^0.15.13",
+    "eslint": "^8.26.0",
+    "glob": "^8.0.3",
+    "husky": "^8.0.1",
+    "jest": "^29.3.1",
+    "prettier": "^2.7.1",
+    "ts-jest": "^29.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "@google-cloud/pubsub": "^3.2.1",
+    "express": "^4.18.2"
+  },
+  "peerDependencies": {
+    "@google-cloud/pubsub": "3.x.x"
+  },
+  "scripts": {
+    "setup": "npx husky install && npx husky add .husky/pre-commit \"yarn style && git add --all\"",
+    "style": "eslint . --ext .ts && prettier --config .prettierrc 'src/**/*.ts' --write",
+    "test": "jest --runInBand",
+    "build": "yarn build:main && yarn build:types",
+    "build:types": "tsc --preserveWatchOutput",
+    "build:main": "node esbuild.js",
+    "simulator": "./scripts/simulator"
+  },
+  "packageManager": "yarn@3.3.0"
+}

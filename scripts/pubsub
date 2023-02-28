@@ -1,0 +1,25 @@
+#!/bin/sh
+cd $(dirname "$0")/..
+
+SIM_DIR=$(pwd)/.simulator/pubsub
+ENV_FILE=$SIM_DIR/.env
+
+# command to check the process status
+if [ "$1" == 'status' ]; then
+  if [ $(docker inspect -f {{.State.Running}} cloud-storage) == "true" ]
+  then
+    echo "cloud storage is running"
+    exit 0
+  fi
+
+  echo "cloud storage is not running"
+  exit 1
+fi
+
+rm -fr $SIM_DIR
+mkdir -p $SIM_DIR
+touch $ENV_FILE
+echo 'PUBSUB_EMULATOR_HOST=localhost:8085' >> $ENV_FILE
+echo 'PUBSUB_PROJECT_ID=simulator' >> $ENV_FILE
+
+gcloud beta emulators pubsub start --project=simulator

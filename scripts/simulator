@@ -1,0 +1,19 @@
+#!/bin/sh
+cd $(dirname "$0")/..
+
+# check required dependencies
+which gcloud > /dev/null 2>&1  || {
+  echo "'gcloud' command not exist";
+  exit 1;
+}
+
+if [ ! -f ~/google-cloud-sdk/platform/pubsub-emulator/bin/cloud-pubsub-emulator ]; then
+  echo "pubsub emulator not found";
+  echo "run installation:";
+  echo "   gcloud components install pubsub-emulator";
+  echo "   gcloud components update";
+  exit 1;
+fi
+
+# run simulators
+yarn concurrently --names PUBSUB -c bgBlue.bold "sh ./scripts/pubsub"
