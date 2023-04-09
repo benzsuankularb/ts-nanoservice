@@ -1,17 +1,21 @@
 {
   "name": "ts-nanoservice",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "main": "build/index.js",
   "module": "build/index.esm.js",
   "types": "build/types/index.d.ts",
-  "repository": "https://github.com/benzsuankularb/ts-nanoservice",
+  "repository": "https://github.com:benzsuankularb/ts-nanoservice.git",
   "files": [
-    "*"
+    "build",
+    "src"
   ],
   "devDependencies": {
+    "@types/cors": "^2.8.13",
     "@types/express": "^4.17.14",
     "@types/jest": "^29.2.2",
+    "@types/morgan": "^1.9.4",
     "@types/node": "^18.11.9",
+    "@types/sprintf-js": "^1.1.2",
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",
     "concurrently": "^7.5.0",
@@ -28,16 +32,25 @@
   },
   "dependencies": {
     "@google-cloud/pubsub": "^3.2.1",
-    "express": "^4.18.2"
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mongodb": "^5.1.0",
+    "morgan": "^1.10.0",
+    "reflect-metadata": "^0.1.13",
+    "sprintf-js": "^1.1.2",
+    "zod": "^3.21.4"
   },
   "peerDependencies": {
     "@google-cloud/pubsub": "3.x.x"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "setup": "npx husky install && npx husky add .husky/pre-commit \"yarn style && git add --all\"",
     "style": "eslint . --ext .ts && prettier --config .prettierrc 'src/**/*.ts' --write",
     "test": "jest --runInBand",
-    "build": "yarn build:main && yarn build:types",
+    "build": "concurrently --names \"MAIN,TYPES\" \"yarn build:main\" \"yarn build:types\"",
     "build:types": "tsc --preserveWatchOutput",
     "build:main": "node esbuild.js",
     "simulator": "./scripts/simulator"

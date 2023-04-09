@@ -31,6 +31,7 @@ async function buildBundle(entry, outfile, options) {
     minify: true,
     sourcemap: true,
     target: ['esnext'],
+    platform: 'node',
     ...options
   });
 }
@@ -43,6 +44,7 @@ async function buildFiles(globPattern, outdir, options) {
     outdir,
     minify: true,
     sourcemap: true,
+    platform: 'node',
     target: ['esnext'],
     ...options
   });

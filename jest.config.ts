@@ -10,13 +10,11 @@ export default async (): Promise<Config.InitialOptions> => {
      color: "greenBright",
    },
    verbose: false,
-//    setupFiles: ["dotenv/config"],
    testMatch: ["**/**/*.test.ts"],
    testEnvironment: "node",
    detectOpenHandles: true,
-   collectCoverage: true,
+   collectCoverage: false,
    transform: { "^.+\\.tsx?$": "ts-jest" },
-//    globalTeardown: "<rootDir>/src/tests/jest-globals-teardown.ts",
    forceExit: true,
  };
 };

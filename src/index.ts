@@ -1,2 +1,4 @@
 export * from './core';
-export * from './infra';
+export * from './core-infrastructure';
+export * from './modules';
+

@@ -1,99 +1,65 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+export class ServiceError<
+    T extends Record<string, any> = Record<string, any>
+> extends Error {
+    readonly serviceId: string;
+    readonly errorId: string;
+    readonly payloads?: T;
+    readonly innerError?: Error;
 
-type ServiceErrorPayload = { [key: string]: boolean | string | number };
-
-export class ServiceErrorBuilder {
-  private serviceId: string;
-
-  constructor(serviceId: string) {
-    this.serviceId = serviceId;
-  }
-
-  build<TPayload extends ServiceErrorPayload>(options: {
-    id: string;
-    message: string;
-  }): ServiceErrorPrototype<TPayload> {
-    return new ServiceErrorPrototype<TPayload>(
-      this.serviceId,
-      options.id,
-      options.message
-    );
-  }
-}
-
-export class ServiceErrorPrototype<TPayload extends ServiceErrorPayload> {
-  readonly serviceId: string;
-  readonly errorId: string;
-  readonly errorMessage?: string;
-
-  constructor(serviceId: string, errorId: string, errorMessage?: string) {
-    this.serviceId = serviceId;
-    this.errorId = errorId;
-    this.errorMessage = errorMessage;
-  }
-
-  new(payload: TPayload): ServiceError<TPayload> {
-    return new ServiceError(this, payload);
-  }
-
-  formatMessage(payload: TPayload): string {
-    let message = this.errorMessage;
-
-    if (!message) {
-      return JSON.stringify(payload);
+    constructor(options: {
+        serviceId: string;
+        errorId: string;
+        payloads?: T;
+        inner?: Error;
+    }) {
+        super();
+        this.serviceId = options.serviceId;
+        this.errorId = options.errorId;
+        this.payloads = options.payloads;
+        this.innerError = options.inner;
     }
 
-    for (const key of Object.keys(payload)) {
-      message = message.replace(`{${key}}`, payload[key].toString());
-    }
-
-    return message;
-  }
-
-  equals(other: ServiceErrorPrototype<any>): boolean {
-    if (!(other instanceof ServiceErrorPrototype)) {
-      return false;
-    }
-
-    return other.serviceId === this.serviceId && other.errorId === this.errorId;
-  }
-}
-
-export class ServiceError<TPayload extends ServiceErrorPayload> extends Error {
-  readonly prototype: ServiceErrorPrototype<TPayload>;
-  readonly payload: TPayload;
-
-  constructor(prototype: ServiceErrorPrototype<TPayload>, payload: TPayload) {
-    super(prototype.formatMessage(payload));
-    this.prototype = prototype;
-    this.payload = payload;
-  }
-
-  is(target: any): boolean {
-    if (target instanceof ServiceErrorPrototype) {
-      return target.equals(this.prototype);
-    }
-
-    if (target instanceof ServiceError) {
-      if (!target.prototype.equals(this.prototype)) {
-        return false;
-      }
-
-      if (
-        Object.keys(target.payload).length !== Object.keys(this.payload).length
-      ) {
-        return false;
-      }
-
-      for (const key of Object.keys(this.payload)) {
-        if (target.payload[key] !== this.payload[key]) {
-          return false;
+    is(options: { serviceId?: string; errorId?: string; payloads?: T }) {
+        if (options.serviceId && this.serviceId !== options.serviceId) {
+            return false;
         }
-      }
 
-      return true;
+        if (options.errorId && this.errorId !== options.errorId) {
+            return false;
+        }
+
+        if (!this.payloads || !options.payloads) {
+            return true;
+        }
+
+        if (this.payloads instanceof Object) {
+            if (
+                Object.keys(options.payloads).length !==
+                Object.keys(this.payloads).length
+            ) {
+                return false;
+            }
+
+            for (const key of Object.keys(this.payloads)) {
+                if (options.payloads[key] !== this.payloads[key]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
-    return false;
-  }
+    equals(obj: unknown): boolean {
+        if (!(obj instanceof ServiceError)) {
+            return false;
+        }
+
+        return this.is({
+            serviceId: obj.serviceId,
+            errorId: obj.errorId,
+            payloads: obj.payloads
+        });
+    }
 }
