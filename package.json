@@ -4,7 +4,7 @@
   "main": "build/index.js",
   "module": "build/index.esm.js",
   "types": "build/types/index.d.ts",
-  "repository": "https://github.com:benzsuankularb/ts-nanoservice.git",
+  "repository": "https://github.com/benzsuankularb/ts-nanoservice",
   "files": [
     "build",
     "src"
@@ -42,9 +42,6 @@
   },
   "peerDependencies": {
     "@google-cloud/pubsub": "3.x.x"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "setup": "npx husky install && npx husky add .husky/pre-commit \"yarn style && git add --all\"",
