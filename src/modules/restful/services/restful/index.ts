@@ -32,21 +32,24 @@ export abstract class RestfulService<
     abstract getDependencies(): Promise<TDeps>;
 
     @Start()
-    async start(): Promise<void> {
+    async startGateway(): Promise<void> {
         const app = express();
-        const apiRouter = Router();
         const dependencies = await this.getDependencies();
 
+        // setup api routers
+        const apiRouter = Router();
+        apiRouter.use(injectDependencies(dependencies));
         this.registerRoutes(apiRouter);
+
+        // setup apps
         app.use(morgan('tiny'));
         app.use(cors());
         app.use(express.json());
         app.use(express.urlencoded());
         app.use(responseContentType());
-        app.use(injectDependencies(dependencies));
-        app.use(apiRouter);
         app.use(responseSpec(this.getSpecPath()));
         app.use(responseHealthCheck());
+        app.use(apiRouter);
         app.use(responseNotFound());
         app.use(responseServiceError());
 

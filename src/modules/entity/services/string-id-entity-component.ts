@@ -1,44 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-    Collection,
-    MongoServerError,
-    ObjectId,
-    UpdateResult,
-    WithId
-} from 'mongodb';
+import { Collection, MongoServerError, UpdateResult, WithId } from 'mongodb';
 import { BaseService, ModuleRef, ServiceInterface, Start } from '../../../core';
 import { Module } from '../module';
+import { EntityComponentServiceInterface } from './entity-component';
 
-type MongoDoc<T> = { _id: ObjectId; value: T };
+type MongoDoc<T> = { _id: string; value: T };
 
-export interface EntityComponent<T> {
+export interface StringIDEntityComponent<T> {
     id: string;
     value: T;
 }
 
-export interface EntityComponentServiceOptions {
+export interface StringIDEntityComponentServiceOptions {
     index?: 'non-unique' | 'unique';
 }
 
-interface EntityComponentServiceInterface_Functions<T> {
-    getByIds(ids: string[]): Promise<(T | undefined)[]>;
-    get(id: string): Promise<T | undefined>;
-}
-
-export type EntityComponentServiceInterface<T> = {
-    functions: EntityComponentServiceInterface_Functions<T>;
-    errors: {
-        VALUE_NOT_UNIQUE: { value: T };
-    };
-    events: {
-        SETTED: {
-            id: string;
-            value: T;
-        };
-    };
-};
-
-export class EntityComponentService<
+export class StringIDEntityComponentService<
     TServiceInf extends ServiceInterface &
         EntityComponentServiceInterface<T> = any,
     T = any
@@ -55,14 +32,13 @@ export class EntityComponentService<
         return this._collection;
     }
 
-    // options?: EntityComponentServiceOptions;
-    constructor(options?: EntityComponentServiceOptions) {
+    constructor(options?: StringIDEntityComponentServiceOptions) {
         super();
         this._index = options?.index;
     }
 
     @Start()
-    async _createIndexes() {
+    async _createIndexes(): Promise<void> {
         if (!this._index) {
             return;
         }
@@ -80,35 +56,16 @@ export class EntityComponentService<
 
     protected _parseEntityComponent(
         doc: WithId<MongoDoc<T>>
-    ): EntityComponent<T> {
+    ): StringIDEntityComponent<T> {
         return {
-            id: this._toEntityId(doc._id),
+            id: doc._id,
             value: doc.value
         };
     }
 
-    protected _parseDocId(id: string): string | ObjectId {
-        if (ObjectId.isValid(id)) {
-            return new ObjectId(id);
-        }
-        return id;
-    }
-
-    protected _toEntityId(docId: ObjectId | string): string {
-        if (docId instanceof ObjectId) {
-            return docId.toHexString();
-        }
-        return docId;
-    }
-
     protected async _get(id: string): Promise<T | undefined> {
         const { collection } = this;
-        if (!ObjectId.isValid(id)) {
-            return undefined;
-        }
-
-        const _id = new ObjectId(id);
-        const doc = await collection.findOne({ _id });
+        const doc = await collection.findOne({ _id: id });
         if (!doc) {
             return undefined;
         }
@@ -118,11 +75,10 @@ export class EntityComponentService<
 
     protected async _set(id: string, value: T | undefined): Promise<void> {
         const { collection } = this;
-        const _id = new ObjectId(id);
         const now = Date.now();
 
         if (!value) {
-            const result = await collection.deleteOne({ _id });
+            const result = await collection.deleteOne({ _id: id });
             if (result.deletedCount > 0) {
                 await this.emit('SETTED', { id, time: now, value } as any);
             }
@@ -132,7 +88,7 @@ export class EntityComponentService<
         let result: UpdateResult;
         try {
             result = await collection.updateOne(
-                { _id },
+                { _id: id },
                 { $set: { value } },
                 { upsert: true }
             );
@@ -153,11 +109,10 @@ export class EntityComponentService<
 
     protected async _getByIds(ids: string[]): Promise<(T | undefined)[]> {
         const { collection } = this;
-        const _ids = ids.map((id) => this._parseDocId(id));
-        const cursor = collection.find({ _id: { $in: _ids as any } });
+        const cursor = collection.find({ _id: { $in: ids as any } });
         const docs = await cursor.toArray();
         const docsById: { [id: string]: WithId<MongoDoc<T>> } = {};
-        docs.forEach((doc) => (docsById[doc._id.toHexString()] = doc));
+        docs.forEach((doc) => (docsById[doc._id] = doc));
 
         return ids.map((id) => {
             const doc = docsById[id];
@@ -177,17 +132,17 @@ export class EntityComponentService<
         if (!doc) {
             return undefined;
         }
-        return this._toEntityId(doc._id.toHexString());
+        return doc._id;
     }
 
     protected async _getIdsByValue(value: T): Promise<string[]> {
         const { collection } = this;
         const cursor = collection.find({ value: value as any });
         const docs = await cursor.toArray();
-        return docs.map((doc) => this._toEntityId(doc._id));
+        return docs.map((doc) => doc._id);
     }
 
-    protected async _getAll(): Promise<EntityComponent<T>[]> {
+    protected async _getAll(): Promise<StringIDEntityComponent<T>[]> {
         const { collection } = this;
         const cursor = collection.find({});
         const docs = await cursor.toArray();

@@ -24,6 +24,13 @@ export class BaseService<T extends ServiceInterface = any> {
         payloads: InferServiceErrors<T>[TErr],
         inner?: Error
     ): ServiceError<InferServiceErrors<T>[TErr]> {
+        if (!inner) {
+            inner = Error();
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const stackItems = inner.stack!.split('\n');
+            stackItems.splice(1, 1);
+            inner.stack = stackItems.join('\n');
+        }
         return new ServiceError({
             serviceId: this.id,
             payloads,

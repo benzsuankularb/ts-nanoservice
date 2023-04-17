@@ -18,7 +18,7 @@ export function responseHealthCheck() {
 }
 
 export function responseServiceError() {
-    return (err: Error, _req: Request, res: Response) => {
+    return (err: Error, _req: Request, res: Response, _next: NextFunction) => {
         console.error(err);
         if (!err) {
             return res.status(204).send();
@@ -27,15 +27,15 @@ export function responseServiceError() {
         if (!(err instanceof ServiceError)) {
             return res.status(500).send({
                 error: 'internal-error',
-                message: err.message
+                message: err.name
             });
         }
 
         const serviceErr = err as ServiceError;
-
         const isNoResource = serviceErr.is({
             errorId: 'NO_RESOURCE'
         });
+
         if (isNoResource) {
             return res.status(404).send({
                 error: 'not-found',
@@ -46,6 +46,7 @@ export function responseServiceError() {
         const isUnauthorized = serviceErr.is({
             errorId: 'UNAUTHORIZED'
         });
+
         if (isUnauthorized) {
             return res.status(401).send({
                 error: 'unauthorized',

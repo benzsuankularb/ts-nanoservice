@@ -18,6 +18,7 @@ export class ServiceError<
         this.errorId = options.errorId;
         this.payloads = options.payloads;
         this.innerError = options.inner;
+        this.stack = options?.inner?.stack;
     }
 
     is(options: { serviceId?: string; errorId?: string; payloads?: T }) {
