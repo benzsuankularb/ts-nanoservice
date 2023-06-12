@@ -1,6 +1,6 @@
 {
   "name": "ts-nanoservice",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "main": "build/index.js",
   "module": "build/index.esm.js",
   "types": "build/types/index.d.ts",
@@ -47,10 +47,8 @@
     "setup": "npx husky install && npx husky add .husky/pre-commit \"yarn style && git add --all\"",
     "style": "eslint . --ext .ts && prettier --config .prettierrc 'src/**/*.ts' --write",
     "test": "jest --runInBand",
-    "build": "concurrently --names \"MAIN,TYPES\" \"yarn build:main\" \"yarn build:types\"",
-    "build:types": "tsc --preserveWatchOutput",
-    "build:main": "node esbuild.js",
-    "simulator": "./scripts/simulator"
+    "build": "node esbuild.js && tsc --preserveWatchOutput",
+    "publish": "yarn npm publish"
   },
   "packageManager": "yarn@3.3.0"
 }

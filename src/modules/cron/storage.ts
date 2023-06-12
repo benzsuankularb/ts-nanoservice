@@ -1,44 +1,84 @@
 import { Collection } from 'mongodb';
 
-export interface CronStorage {
-    set(key: string, time: number): Promise<void>;
-    get(key: string): Promise<number>;
+export interface CronSessionStorage {
+  open(key: string): Promise<[time: number]>;
+  close(key: string, time?: number): Promise<void>;
 }
 
-export class MemoryStorage implements CronStorage {
-    _times: { [key: string]: number } = {};
+export class MemoryCronSessionStorage implements CronSessionStorage {
+  _times: { [key: string]: number } = {};
+  _opening: { [key: string]: boolean } = {};
 
-    async set(key: string, time: number): Promise<void> {
-        this._times[key] = time;
+  async open(key: string): Promise<[time: number]> {
+    if (this._opening[key]) {
+      throw `cron session ${key} already open'`;
     }
+    this._opening[key] = true;
+    const time = this._times[key] ?? 0;
+    return [time];
+  }
 
-    async get(key: string): Promise<number> {
-        return this._times[key] ?? 0;
+  async close(key: string, time?: number): Promise<void> {
+    if (!this._opening[key]) {
+      throw `cron session ${key} already closed'`;
     }
+    if (time !== undefined) {
+      this._times[key] = time;
+    }
+    this._opening[key] = true;
+  }
 }
 
 interface MongoDoc {
-    _id: string;
-    time: number;
+  _id: string;
+  time: number;
+  open?: boolean;
 }
 
-export class MongoStorage implements CronStorage {
-    collection: Collection<MongoDoc>;
+export class MongoCronSessionStorage implements CronSessionStorage {
+  collection: Collection<MongoDoc>;
 
-    constructor(collection: Collection) {
-        this.collection = collection as unknown as Collection<MongoDoc>;
+  constructor(collection: Collection) {
+    this.collection = collection as unknown as Collection<MongoDoc>;
+  }
+
+  async open(serviceId: string): Promise<[time: number]> {
+    const result = await this.collection.findOneAndUpdate(
+      {
+        _id: serviceId,
+        open: { $exists: false },
+      },
+      {
+        $set: {
+          open: true,
+        },
+        $setOnInsert: {
+          time: 0,
+        },
+      },
+      {
+        upsert: true,
+        returnDocument: 'after',
+      }
+    );
+
+    if (!result.ok) {
+      throw `cron session ${serviceId} already open'`;
     }
 
-    async set(key: string, time: number): Promise<void> {
-        await this.collection.updateOne(
-            { _id: `cron--${key}` },
-            { time },
-            { upsert: true }
-        );
-    }
+    const time = result.value?.time ?? 0;
+    return [time];
+  }
 
-    async get(key: string): Promise<number> {
-        const doc = await this.collection.findOne({ _id: `cron--${key}` });
-        return doc?.time ?? 0;
-    }
+  async close(serviceId: string, time?: number): Promise<void> {
+    await this.collection.findOneAndUpdate(
+      {
+        _id: serviceId,
+      },
+      {
+        open: { $unset: true },
+        ...(time !== undefined ? { time } : {}),
+      }
+    );
+  }
 }
