@@ -1,13 +1,12 @@
 {
   "name": "ts-nanoservice",
-  "version": "1.4.1",
+  "version": "1.4.3",
   "main": "build/index.js",
   "module": "build/index.esm.js",
   "types": "build/types/index.d.ts",
   "repository": "https://github.com/benzsuankularb/ts-nanoservice",
   "files": [
-    "build",
-    "src"
+    "build"
   ],
   "devDependencies": {
     "@types/cors": "^2.8.13",
