@@ -16,10 +16,12 @@ serve
 
 /docs/
 .idea/*
-.vscode
 .simulator
 
 .DS_Store
 coverage
 *.log
 .env
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore

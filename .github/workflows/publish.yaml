@@ -26,6 +26,6 @@ jobs:
         run: yarn test
       
       - name: Publish package on NPM 📦
-        run: npm publish
+        run: yarn publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
